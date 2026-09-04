@@ -1,0 +1,22 @@
+# Python
+*.pyc
+.ipynb_checkpoints/
+.venv/
+data/
+__pycache__/
+# LaTeX
+*.fdb_latexmk
+*.fls
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.out
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# Sekrety
+.env
+*.key
