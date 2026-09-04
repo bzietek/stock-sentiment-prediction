@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS dla lepszego wyglądu
+
 st.markdown("""
 <style>
     /* Większe nagłówki */
@@ -138,6 +138,9 @@ def calculate_portfolio_value(df, model, features, initial_capital=10000):
 st.markdown('<h1 class="main-header">📈 StockSentiment AI</h1>', unsafe_allow_html=True)
 st.markdown('<p class="sub-header">Inteligentny system prognozowania ruchów giełdowych oparty na analizie sentymentu wiadomości</p>', unsafe_allow_html=True)
 
+st.info("Dashboard prezentuje wyłącznie zbiór testowy — dane, których model nie widział podczas treningu.")   # ← tutaj
+
+
 df = load_data()
 model = load_model()
 news_df = load_news()
@@ -158,29 +161,7 @@ if df is None or model is None:
         """, unsafe_allow_html=True)
         
         st.markdown("<br>", unsafe_allow_html=True)
-        
-        if st.button("🔄 Wygeneruj Dane Demonstracyjne", use_container_width=True, type="primary"):
-            with st.spinner("Generowanie danych... Proszę czekać."):
-                exec(open("synthetic_test.py").read())
-                import sys
-                sys.argv = ['model_trainer.py']  # Reset argumentów
                 
-                train_df = pd.read_csv(DATA_FILE)
-                train_df = train_df.sort_values('Date')
-                features = ['Avg_Sentiment', 'Volume', 'Close']
-                X = train_df[features]
-                y = train_df['Target']
-                split = int(len(train_df) * 0.8)
-                
-                model = XGBClassifier(n_estimators=100, learning_rate=0.05, max_depth=5, random_state=42)
-                model.fit(X.iloc[:split], y.iloc[:split])
-                
-                os.makedirs("models", exist_ok=True)
-                model.save_model(MODEL_FILE)
-                
-            st.success("✅ Dane wygenerowane! Odśwież stronę (F5), aby zobaczyć dashboard.")
-            st.balloons()
-        
         st.markdown("""
         <div style="margin-top: 2rem; padding: 1rem; background: #e8f4f8; border-radius: 10px;">
             <p style="margin: 0; font-size: 0.9rem;">
@@ -192,6 +173,8 @@ if df is None or model is None:
     
     st.stop()
 
+split_index = int(len(df) * 0.8)
+df = df.iloc[split_index:].copy()
 
 st.sidebar.markdown("## 🎛️ Panel Sterowania")
 st.sidebar.markdown("---")
@@ -211,7 +194,7 @@ max_date = df['Date'].max().date()
 st.sidebar.markdown("### 📅 Zakres Analizy")
 date_range = st.sidebar.date_input(
     "Wybierz okres:",
-    value=(max_date - timedelta(days=90), max_date),
+    value=(min_date, max_date),
     min_value=min_date,
     max_value=max_date
 )
@@ -273,12 +256,6 @@ if mode == "🏠 Panel Inwestora":
     df_portfolio['Correct'] = (df_portfolio['Prediction'] == df_portfolio['Actual']).astype(int)
     accuracy = df_portfolio['Correct'].mean() * 100
     
-    with col4:
-        st.metric(
-            "🎯 Trafność Prognoz",
-            f"{accuracy:.1f}%",
-            f"{accuracy - 50:+.1f}% vs losowe"
-        )
     
     st.markdown("---")
     
